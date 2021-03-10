@@ -30,6 +30,10 @@ const props = {
   columnAttr: {
     type: [Object],
     default: () => ({})
+  },
+  fillGaps: {
+    type: Boolean,
+    default: false,
   }
 };
 
@@ -65,6 +69,18 @@ const breakpointValue = (mixed, windowWidth) => {
   }
 
   return matchedValue;
+};
+
+function getShortestColumnIndex (heights) {
+  let trgIndex, trgHeight;
+  for (let srcIndex = 0; srcIndex < heights.length; srcIndex++) {
+    const srcHeight = heights[srcIndex];
+    if (trgHeight === undefined || srcHeight < trgHeight) {
+      trgHeight = srcHeight;
+      trgIndex = srcIndex;
+    }
+  }
+  return trgIndex;
 }
 
 const component = {
@@ -133,38 +149,44 @@ const component = {
       this.displayColumns = newColumns;
     },
 
-    _getChildItemsInColumnsArray() {
-      const columns = [];
-      let childItems = this.$slots.default || [];
+    _getChildItemsInColumnsArray () {
+      let vnodes = this.$slots.default || [];
 
       // This component does not work with a child <transition-group /> ..yet,
       // so for now we think it may be helpful to ignore until we can find a way for support
-      if(childItems.length === 1 && childItems[0].componentOptions && childItems[0].componentOptions.tag == 'transition-group') {
-        childItems = childItems[0].componentOptions.children;
+      let vnode = vnodes[0];
+      if (vnode && vnode.componentOptions && vnode.componentOptions.tag === 'transition-group') {
+        vnodes = vnode.componentOptions.children;
       }
 
-      // Loop through child elements
-      for (let i = 0, visibleItemI = 0; i < childItems.length; i++, visibleItemI++) {
-        // skip Vue elements without tags, which includes
-        // whitespace elements and also plain text
-        if(!childItems[i].tag) {
-          visibleItemI--;
+      // variables
+      const columns = [];
+      const heights = new Array(this.displayColumns).fill(0);
 
-          continue;
+      // nodes
+      vnodes = vnodes.filter(child => child.tag);
+      vnodes.forEach((vnode, index) => {
+        // get initial index
+        let colIndex = index % this.displayColumns;
+
+        // if we've an element, fill the shortest column instead
+        if (this.fillGaps && vnode.elm) {
+          colIndex = getShortestColumnIndex(heights);
+          heights[colIndex] += vnode.elm.offsetHeight;
         }
 
-        // Get the column index the child item will end up in
-        const columnIndex = visibleItemI % this.displayColumns;
-
-        if(!columns[columnIndex]) {
-          columns[columnIndex] = [];
+        // create column if it doesn't exist
+        if (!columns[colIndex]) {
+          columns[colIndex] = [];
         }
 
-        columns[columnIndex].push(childItems[i]);
-      }
+        // add node
+        columns[colIndex].push(vnode);
+      });
 
+      // return
       return columns;
-    }
+    },
   },
 
   render(createElement) {
