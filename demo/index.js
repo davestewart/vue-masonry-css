@@ -53,5 +53,10 @@ Vue.component('dynamically-generated-masonry', {
 })
 
 new Vue({
-  el: '#app'
+  el: '#app',
+  data () {
+    return {
+      fillGaps: true,
+    }
+  }
 });
