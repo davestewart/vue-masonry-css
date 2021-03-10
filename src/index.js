@@ -42,27 +42,27 @@ const props = {
 const breakpointValue = (mixed, windowWidth) => {
   const valueAsNum = parseInt(mixed);
 
-  if(valueAsNum > -1) {
+  if (valueAsNum > -1) {
     return mixed;
-  }else if(typeof mixed !== 'object') {
+  } else if (typeof mixed !== 'object') {
     return 0;
   }
 
   let matchedBreakpoint = Infinity;
   let matchedValue = mixed.default || 0;
 
-  for(let k in mixed) {
+  for (let k in mixed) {
     const breakpoint = parseInt(k);
     const breakpointValRaw = mixed[breakpoint];
     const breakpointVal = parseInt(breakpointValRaw);
 
-    if(isNaN(breakpoint) || isNaN(breakpointVal)) {
+    if (isNaN(breakpoint) || isNaN(breakpointVal)) {
       continue;
     }
 
     const isNewBreakpoint = windowWidth <= breakpoint && breakpoint < matchedBreakpoint;
 
-    if(isNewBreakpoint) {
+    if (isNewBreakpoint) {
       matchedBreakpoint = breakpoint;
       matchedValue = breakpointValRaw;
     }
@@ -86,32 +86,32 @@ function getShortestColumnIndex (heights) {
 const component = {
   props,
 
-  data() {
+  data () {
     return {
       displayColumns: 2,
       displayGutter: 0
-    }
+    };
   },
 
-  mounted() {
+  mounted () {
     this.$nextTick(() => {
       this.reCalculate();
     });
 
     // Bind resize handler to page
-    if(window) {
+    if (window) {
       window.addEventListener('resize', this.reCalculate);
     }
   },
 
-  updated() {
+  updated () {
     this.$nextTick(() => {
       this.reCalculate();
     });
   },
 
-  beforeDestroy() {
-    if(window) {
+  beforeDestroy () {
+    if (window) {
       window.removeEventListener('resize', this.reCalculate);
     }
   },
@@ -119,7 +119,7 @@ const component = {
   methods: {
     // Recalculate how many columns to display based on window width
     // and the value of the passed `:cols=` prop
-    reCalculate() {
+    reCalculate () {
       const previousWindowWidth = this.windowWidth;
 
       this.windowWidth = (window ? window.innerWidth : null) || Infinity;
@@ -127,7 +127,7 @@ const component = {
       // Window resize events get triggered on page height
       // change which when loading the page can result in multiple
       // needless calculations. We prevent this here.
-      if(previousWindowWidth === this.windowWidth) {
+      if (previousWindowWidth === this.windowWidth) {
         return;
       }
 
@@ -136,11 +136,11 @@ const component = {
       this._reCalculateGutterSize(this.windowWidth);
     },
 
-    _reCalculateGutterSize(windowWidth) {
+    _reCalculateGutterSize (windowWidth) {
       this.displayGutter = breakpointValue(this.gutter, windowWidth);
     },
 
-    _reCalculateColumnCount(windowWidth) {
+    _reCalculateColumnCount (windowWidth) {
       let newColumns = breakpointValue(this.cols, windowWidth);
 
       // Make sure we can return a valid value
@@ -189,10 +189,10 @@ const component = {
     },
   },
 
-  render(createElement) {
+  render (createElement) {
     const columnsContainingChildren = this._getChildItemsInColumnsArray();
     const isGutterSizeUnitless = parseInt(this.displayGutter) === this.displayGutter * 1;
-    const gutterSizeWithUnit =  isGutterSizeUnitless ? `${this.displayGutter}px` : this.displayGutter;
+    const gutterSizeWithUnit = isGutterSizeUnitless ? `${this.displayGutter}px` : this.displayGutter;
 
     const columnStyle = {
       boxSizing: 'border-box',
@@ -226,19 +226,19 @@ const component = {
   }
 };
 
-const Plugin = function () {}
+const Plugin = function () {};
 
-Plugin.install = function (Vue, options) {
+Plugin.install = function (Vue, options = {}) {
   if (Plugin.installed) {
     return;
   }
 
-  if(options && options.name) {
+  if (options.name) {
     Vue.component(options.name, component);
   } else {
     Vue.component(componentName, component);
   }
-}
+};
 
 if (typeof window !== 'undefined' && window.Vue) {
   window.Vue.use(Plugin);
